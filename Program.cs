@@ -1,41 +1,53 @@
+
+
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// 1. Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console() // Write logs to console 
+    .WriteTo.File("Logs/log-.txt",  // Logs to file
+    rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+// 2. Replace default .NET logger with Serilog
+builder.Host.UseSerilog(Log.Logger);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// 3. Add a simple endpoint to test logging
+app.MapGet("/", () =>
 {
-    app.MapOpenApi();
-}
+    // Using the built-in logging abstraction (Ilogger<Program>)
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Hello from ASP.NET Core with Serilog!");
+    return "Hello from ASP.NET Core with Serilog!";
+});
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
+// 4. Test an error log
+app.MapGet("/error", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    throw new Exception("Test exception to be logged by Serilog");
+});
 
-app.MapGet("/weatherforecast", () =>
+app.UseExceptionHandler(errorApp =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    errorApp.Run(async context =>
+    {
+        var exceptionHandlerPathFeature = 
+
+        context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+
+        // Injecting the logger instance
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+        logger.LogError(exceptionHandlerPathFeature.Error, "An error occurred while processing your request.");
+
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsync("An error occurred while processing your request.");
+    });
+
+});
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
