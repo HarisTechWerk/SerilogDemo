@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Z84iugQz5us=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Haris\\Projects\\SerilogDemo\\SerilogDemo.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Haris\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.0\\microsoft.aspnetcore.openapi.9.0.0.nupkg.sha512",
+    "C:\\Users\\Haris\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
